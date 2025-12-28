@@ -55,7 +55,55 @@ function plugin_version_extras() {
     ];
 }
 
+
 function plugin_extras_check_prerequisites() {
+    // Detect GLPI version for GLPI 11+ (no GLPI_VERSION constant)
+    $min_version = '10.0.0';
+    $max_version = '12.0';
+    $glpi_version = null;
+    $glpi_root = '/var/www/glpi';
+    $version_dir = $glpi_root . '/version';
+    if (is_dir($version_dir)) {
+        $files = scandir($version_dir, SCANDIR_SORT_DESCENDING);
+        foreach ($files as $file) {
+            if ($file[0] !== '.' && preg_match('/^\d+\.\d+\.\d+$/', $file)) {
+                $glpi_version = $file;
+                break;
+            }
+        }
+    }
+    // Fallback for older GLPI: try constant
+    if ($glpi_version === null && defined('GLPI_VERSION')) {
+        $glpi_version = GLPI_VERSION;
+    }
+    // Load Toolbox if not loaded
+    if (!class_exists('Toolbox') && file_exists($glpi_root . '/src/Toolbox.php')) {
+        require_once $glpi_root . '/src/Toolbox.php';
+    }
+    if ($glpi_version === null) {
+        if (class_exists('Toolbox') && method_exists('Toolbox', 'logInFile')) {
+            Toolbox::logInFile('extras', '[setup.php:plugin_extras_check_prerequisites] ERROR: GLPI version not detected.');
+        }
+        return false;
+    }
+    if (version_compare($glpi_version, $min_version, '<')) {
+        if (class_exists('Toolbox') && method_exists('Toolbox', 'logInFile')) {
+            Toolbox::logInFile('extras', sprintf(
+                'ERROR [setup.php:plugin_extras_check_prerequisites] GLPI version %s is less than required minimum %s, user=%s',
+                $glpi_version, $min_version, $_SESSION['glpiname'] ?? 'unknown'
+            ));
+        }
+        return false;
+    }
+    if (version_compare($glpi_version, $max_version, '>')) {
+        if (class_exists('Toolbox') && method_exists('Toolbox', 'logInFile')) {
+            Toolbox::logInFile('extras', sprintf(
+                'ERROR [setup.php:plugin_extras_check_prerequisites] GLPI version %s is greater than supported maximum %s, user=%s',
+                $glpi_version, $max_version, $_SESSION['glpiname'] ?? 'unknown'
+            ));
+        }
+        return false;
+    }
     return true;
 }
 

@@ -81,26 +81,35 @@ function plugin_extras_check_prerequisites() {
         require_once $glpi_root . '/src/Toolbox.php';
     }
     if ($glpi_version === null) {
+        $msg = '[setup.php:plugin_extras_check_prerequisites] ERROR: GLPI version not detected.';
         if (class_exists('Toolbox') && method_exists('Toolbox', 'logInFile')) {
-            Toolbox::logInFile('extras', '[setup.php:plugin_extras_check_prerequisites] ERROR: GLPI version not detected.');
+            Toolbox::logInFile('extras', $msg);
+        } else {
+            error_log('[extras] ' . $msg);
         }
         return false;
     }
     if (version_compare($glpi_version, $min_version, '<')) {
+        $msg = sprintf(
+            'ERROR [setup.php:plugin_extras_check_prerequisites] GLPI version %s is less than required minimum %s, user=%s',
+            $glpi_version, $min_version, $_SESSION['glpiname'] ?? 'unknown'
+        );
         if (class_exists('Toolbox') && method_exists('Toolbox', 'logInFile')) {
-            Toolbox::logInFile('extras', sprintf(
-                'ERROR [setup.php:plugin_extras_check_prerequisites] GLPI version %s is less than required minimum %s, user=%s',
-                $glpi_version, $min_version, $_SESSION['glpiname'] ?? 'unknown'
-            ));
+            Toolbox::logInFile('extras', $msg);
+        } else {
+            error_log('[extras] ' . $msg);
         }
         return false;
     }
     if (version_compare($glpi_version, $max_version, '>')) {
+        $msg = sprintf(
+            'ERROR [setup.php:plugin_extras_check_prerequisites] GLPI version %s is greater than supported maximum %s, user=%s',
+            $glpi_version, $max_version, $_SESSION['glpiname'] ?? 'unknown'
+        );
         if (class_exists('Toolbox') && method_exists('Toolbox', 'logInFile')) {
-            Toolbox::logInFile('extras', sprintf(
-                'ERROR [setup.php:plugin_extras_check_prerequisites] GLPI version %s is greater than supported maximum %s, user=%s',
-                $glpi_version, $max_version, $_SESSION['glpiname'] ?? 'unknown'
-            ));
+            Toolbox::logInFile('extras', $msg);
+        } else {
+            error_log('[extras] ' . $msg);
         }
         return false;
     }
